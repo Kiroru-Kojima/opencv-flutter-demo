@@ -1,0 +1,26 @@
+# Repo-root ignore (monorepo convenience)
+.DS_Store
+
+# Flutter/Dart (any package)
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+
+# Android / Gradle
+**/.gradle/
+**/.cxx/
+**/local.properties
+**/key.properties
+**/*.keystore
+**/*.jks
+
+# iOS / Xcode / CocoaPods
+**/Pods/
+**/.symlinks/
+**/*.xcworkspace/xcuserdata/
+**/*.xcodeproj/xcuserdata/
+**/DerivedData/
