@@ -3,8 +3,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../opencv/backend_kind.dart';
-import '../../opencv/channel_backend.dart';
 import '../../opencv/ffi_backend.dart';
 import '../../opencv/pixel_conversion.dart';
 import '../../opencv/test_image.dart';
@@ -19,14 +17,11 @@ class DemoScreen extends StatefulWidget {
 
 class _DemoScreenState extends State<DemoScreen> {
   final _backend = OpenCvFfiBackend();
-  final _channelBackend = OpenCvChannelBackend();
 
   ui.Image? _srcImage;
   ui.Image? _edgesImage;
   String? _error;
   bool _busy = false;
-
-  OpenCvBackendKind _backendKind = OpenCvBackendKind.ffi;
 
   double _t1 = 80;
   double _t2 = 160;
@@ -62,31 +57,15 @@ class _DemoScreenState extends State<DemoScreen> {
       final img = buildCheckerboardBgrImage(width: 320, height: 240);
       final srcUi = await bgrBytesToUiImage(bgrBytes: img.bgrBytes, width: img.width, height: img.height);
 
-      ui.Image edgesUi;
-      switch (_backendKind) {
-        case OpenCvBackendKind.ffi:
-          final srcMat = img.toMat();
-          edgesUi = await _backend.cannyEdgesRgbaImage(
-            srcMat,
-            threshold1: _t1,
-            threshold2: _t2,
-            apertureSize: _aperture,
-            l2gradient: _l2,
-          );
-          srcMat.dispose();
-          break;
-        case OpenCvBackendKind.platformChannel:
-          edgesUi = await _channelBackend.cannyEdgesRgbaImage(
-            img.bgrBytes,
-            width: img.width,
-            height: img.height,
-            threshold1: _t1,
-            threshold2: _t2,
-            apertureSize: _aperture,
-            l2gradient: _l2,
-          );
-          break;
-      }
+      final srcMat = img.toMat();
+      final edgesUi = await _backend.cannyEdgesRgbaImage(
+        srcMat,
+        threshold1: _t1,
+        threshold2: _t2,
+        apertureSize: _aperture,
+        l2gradient: _l2,
+      );
+      srcMat.dispose();
 
       setState(() {
         _srcImage?.dispose();
@@ -107,30 +86,13 @@ class _DemoScreenState extends State<DemoScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final backends = availableBackends();
 
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
         Text('入力は合成画像（チェッカーボード）です。', style: theme.textTheme.bodyMedium),
         const SizedBox(height: 12),
-        DropdownButtonFormField<OpenCvBackendKind>(
-          key: ValueKey(_backendKind),
-          initialValue: _backendKind,
-          decoration: const InputDecoration(
-            labelText: 'backend',
-            border: OutlineInputBorder(),
-          ),
-          items: backends
-              .map((k) => DropdownMenuItem(value: k, child: Text(k.label)))
-              .toList(growable: false),
-          onChanged: (_busy || backends.length <= 1)
-              ? null
-              : (v) {
-                  if (v == null) return;
-                  setState(() => _backendKind = v);
-                },
-        ),
+        Text('backend: FFI (opencv_dart)', style: theme.textTheme.bodyMedium),
         const SizedBox(height: 12),
         Wrap(
           spacing: 12,

@@ -4,12 +4,9 @@
 
 - Flutterアプリ（opencv_dart方式）: `opencv_demo`
   - `FFI (opencv_dart)` を使って同一処理を実行
-  - Androidのみ `Platform Channel (native OpenCV)` も選べます（`packages/opencv_channel`）
 - Flutterアプリ（ネイティブOpenCV方式）: `opencv_native_demo`
   - `Platform Channel (native OpenCV)` のみ（`packages/opencv_native_channel`）
 
-- Platform Channelプラグイン（Androidのみ）: `packages/opencv_channel`
-  - Android: Maven CentralのOpenCV（Java API）
 - Platform Channelプラグイン（iOS/Android）: `packages/opencv_native_channel`
   - iOS: CocoaPodsの `OpenCV-Dynamic-Framework`（Objective-C++）
   - Android: Maven CentralのOpenCV（Java API）
@@ -34,10 +31,9 @@ flutter run
 - `opencv_native_demo`（iOS）はCocoaPodsで `OpenCV-Dynamic-Framework` を取得します
 - AndroidはGradleで `org.opencv:opencv` を取得します
 
-アプリ起動後:
+アプリ起動後（両アプリ共通）:
 - `Demo` タブ: 合成画像（チェッカーボード）→ Canny エッジ
 - `Bench` タブ: 同一入力に対する処理時間分布（avg/p50/p90/p99）
-- Androidの `opencv_demo` のみ `backend` で `FFI` / `Platform Channel` を切り替え
 
 比較する場合:
 - 同一端末で `opencv_demo` と `opencv_native_demo` の `Bench` を実行し、数値を比較します

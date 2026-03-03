@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../../opencv/backend_kind.dart';
-import '../../opencv/channel_backend.dart';
 import '../../opencv/ffi_backend.dart';
 import '../../opencv/test_image.dart';
 
@@ -15,13 +13,10 @@ class BenchScreen extends StatefulWidget {
 
 class _BenchScreenState extends State<BenchScreen> {
   final _backend = OpenCvFfiBackend();
-  final _channelBackend = OpenCvChannelBackend();
 
   bool _busy = false;
   String? _error;
   _BenchSummary? _summary;
-
-  OpenCvBackendKind _backendKind = OpenCvBackendKind.ffi;
 
   int _warmup = 10;
   int _iterations = 100;
@@ -46,41 +41,20 @@ class _BenchScreenState extends State<BenchScreen> {
 
     try {
       final img = buildCheckerboardBgrImage(width: 640, height: 480);
-
-      final List<double> samples;
-      switch (_backendKind) {
-        case OpenCvBackendKind.ffi:
-          final src = img.toMat();
-          final r = await _backend.benchmarkCanny(
-            src,
-            warmup: _warmup,
-            iterations: _iterations,
-            threshold1: 80,
-            threshold2: 160,
-            apertureSize: 3,
-            l2gradient: false,
-          );
-          src.dispose();
-          samples = r.samplesMs;
-          break;
-        case OpenCvBackendKind.platformChannel:
-          final r = await _channelBackend.benchmarkCanny(
-            img.bgrBytes,
-            width: img.width,
-            height: img.height,
-            warmup: _warmup,
-            iterations: _iterations,
-            threshold1: 80,
-            threshold2: 160,
-            apertureSize: 3,
-            l2gradient: false,
-          );
-          samples = r.samplesMs;
-          break;
-      }
+      final src = img.toMat();
+      final r = await _backend.benchmarkCanny(
+        src,
+        warmup: _warmup,
+        iterations: _iterations,
+        threshold1: 80,
+        threshold2: 160,
+        apertureSize: 3,
+        l2gradient: false,
+      );
+      src.dispose();
 
       setState(() {
-        _summary = _BenchSummary.fromSamples(samples);
+        _summary = _BenchSummary.fromSamples(r.samplesMs);
       });
     } catch (e, st) {
       debugPrint('OpenCV bench error: $e\n$st');
@@ -93,7 +67,6 @@ class _BenchScreenState extends State<BenchScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final backends = availableBackends();
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -103,23 +76,7 @@ class _BenchScreenState extends State<BenchScreen> {
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
-        DropdownButtonFormField<OpenCvBackendKind>(
-          key: ValueKey(_backendKind),
-          initialValue: _backendKind,
-          decoration: const InputDecoration(
-            labelText: 'backend',
-            border: OutlineInputBorder(),
-          ),
-          items: backends
-              .map((k) => DropdownMenuItem(value: k, child: Text(k.label)))
-              .toList(growable: false),
-          onChanged: (_busy || backends.length <= 1)
-              ? null
-              : (v) {
-                  if (v == null) return;
-                  setState(() => _backendKind = v);
-                },
-        ),
+        Text('backend: FFI (opencv_dart)', style: theme.textTheme.bodyMedium),
         const SizedBox(height: 12),
         Row(
           children: [

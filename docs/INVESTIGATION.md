@@ -4,7 +4,7 @@
 
 ### CocoaPods
 - **手軽**: `OpenCV-Dynamic-Framework`（xcframework配布）をPod依存にするのが簡単です  
-  - 例: このリポジトリの `packages/opencv_channel/ios/opencv_channel.podspec`
+  - 例: このリポジトリの `packages/opencv_native_channel/ios/opencv_native_channel.podspec`
 - **注意**: CocoaPods上の `OpenCV` というPodもありますが、バージョンが古い場合があります（採用前に要確認）
 
 参考:
@@ -23,7 +23,7 @@
 
 ### Gradle（Java/Kotlin API）
 - **最短ルート**: Maven CentralのOpenCVを依存追加して、`org.opencv.*` APIを使う  
-  - 例: このリポジトリの `packages/opencv_channel/android/build.gradle`
+  - 例: このリポジトリの `packages/opencv_native_channel/android/build.gradle.kts`
 - 画像が `ByteArray` で渡せる範囲なら、NDK無しでもデモは作れます
 
 参考:
@@ -48,9 +48,7 @@
 ### 自作案A: Platform Channels 経由でネイティブ呼び出し
 - **長所**: 既存のiOS/AndroidのOpenCV導入パターン（Pods/Gradle/NDK）をそのまま使いやすい
 - **短所**: 画像バッファの受け渡しでコピー・シリアライズが発生しやすく、フレーム単位の呼び出し回数が増えるほど不利
-- このリポジトリでは以下が最小実装例です
-  - Androidのみ: `packages/opencv_channel`
-  - iOS/Android: `packages/opencv_native_channel`（iOSは `OpenCV-Dynamic-Framework` をPodで取得）
+- このリポジトリでは `packages/opencv_native_channel` が最小実装例です（iOSは `OpenCV-Dynamic-Framework` をPodで取得）
 
 ### 自作案B: Dart FFI で直接呼び出し
 - **長所**: 呼び出しオーバーヘッドが小さく、設計次第でコピー回数も抑えやすい（頻繁なフレーム処理に向く）
