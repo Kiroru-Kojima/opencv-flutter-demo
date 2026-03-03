@@ -1,0 +1,29 @@
+PODS:
+  - Flutter (1.0.0)
+  - OpenCV-Dynamic-Framework (4.10.0.1)
+  - opencv_native_channel (0.0.1):
+    - Flutter
+    - OpenCV-Dynamic-Framework
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - opencv_native_channel (from `.symlinks/plugins/opencv_native_channel/ios`)
+
+SPEC REPOS:
+  trunk:
+    - OpenCV-Dynamic-Framework
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  opencv_native_channel:
+    :path: ".symlinks/plugins/opencv_native_channel/ios"
+
+SPEC CHECKSUMS:
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  OpenCV-Dynamic-Framework: b9483ac40f2e5459231f5d140f1fb754ec605e2b
+  opencv_native_channel: c700fa7d3f669f4f2c7a15a74c1ffc844d05135e
+
+PODFILE CHECKSUM: 47a757a7853adf00f34d8294fd2037725e0d47ac
+
+COCOAPODS: 1.16.2

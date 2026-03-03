@@ -1,5 +1,7 @@
 # Repo-root ignore (monorepo convenience)
 .DS_Store
+.vscode/
+awesome-opencv_dart/
 
 # Flutter/Dart (any package)
 **/.dart_tool/
