@@ -98,6 +98,63 @@ class OpenCvFfiBackend {
     return OpenCvBenchResult(samplesMs: samples);
   }
 
+  Future<OpenCvBenchDetailResult> benchmarkCannyDetailed(
+    cv.Mat bgr, {
+    required int warmup,
+    required int iterations,
+    required double threshold1,
+    required double threshold2,
+    required int apertureSize,
+    required bool l2gradient,
+  }) async {
+    _ensureNotDisposed();
+
+    for (int i = 0; i < warmup; i++) {
+      final gray = await cv.cvtColorAsync(bgr, cv.COLOR_BGR2GRAY);
+      final edges = await cv.cannyAsync(
+        gray,
+        threshold1,
+        threshold2,
+        apertureSize: apertureSize,
+        l2gradient: l2gradient,
+      );
+      gray.dispose();
+      edges.dispose();
+    }
+
+    final totalMs = <double>[];
+    final grayMs = <double>[];
+    final cannyMs = <double>[];
+
+    for (int i = 0; i < iterations; i++) {
+      final swTotal = Stopwatch()..start();
+
+      final swGray = Stopwatch()..start();
+      final gray = await cv.cvtColorAsync(bgr, cv.COLOR_BGR2GRAY);
+      swGray.stop();
+
+      final swCanny = Stopwatch()..start();
+      final edges = await cv.cannyAsync(
+        gray,
+        threshold1,
+        threshold2,
+        apertureSize: apertureSize,
+        l2gradient: l2gradient,
+      );
+      swCanny.stop();
+
+      gray.dispose();
+      edges.dispose();
+
+      swTotal.stop();
+      totalMs.add(swTotal.elapsedMicroseconds / 1000.0);
+      grayMs.add(swGray.elapsedMicroseconds / 1000.0);
+      cannyMs.add(swCanny.elapsedMicroseconds / 1000.0);
+    }
+
+    return OpenCvBenchDetailResult(totalMs: totalMs, grayMs: grayMs, cannyMs: cannyMs);
+  }
+
   void _ensureNotDisposed() {
     if (_disposed) throw StateError('OpenCvFfiBackend is disposed');
   }
@@ -122,4 +179,18 @@ class OpenCvBenchResult {
     final idx = (q * (sorted.length - 1)).round();
     return sorted[idx.clamp(0, sorted.length - 1)];
   }
+}
+
+class OpenCvBenchDetailResult {
+  OpenCvBenchDetailResult({
+    required List<double> totalMs,
+    required List<double> grayMs,
+    required List<double> cannyMs,
+  })  : totalMs = List.unmodifiable(totalMs),
+        grayMs = List.unmodifiable(grayMs),
+        cannyMs = List.unmodifiable(cannyMs);
+
+  final List<double> totalMs;
+  final List<double> grayMs;
+  final List<double> cannyMs;
 }

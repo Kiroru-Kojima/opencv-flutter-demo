@@ -33,6 +33,7 @@ class OpencvNativeChannelPlugin :
         when (call.method) {
             "getPlatformVersion" -> result.success("Android ${android.os.Build.VERSION.RELEASE}")
             "cannyBgrToRgba" -> handleCanny(call, result)
+            "cannyBgrToRgbaProfile" -> handleCannyProfile(call, result)
             else -> result.notImplemented()
         }
     }
@@ -91,6 +92,84 @@ class OpencvNativeChannelPlugin :
             val out = ByteArray(width * height * 4)
             rgba.get(0, 0, out)
             result.success(out)
+        } catch (e: Throwable) {
+            result.error("OPENCV_ERROR", e.message, null)
+        } finally {
+            src?.release()
+            gray?.release()
+            edges?.release()
+            rgba?.release()
+        }
+    }
+
+    private fun handleCannyProfile(call: MethodCall, result: Result) {
+        if (!ensureOpenCv(result)) return
+
+        val bgr = call.argument<ByteArray>("bgr")
+        val width = call.argument<Int>("width")
+        val height = call.argument<Int>("height")
+        val threshold1 = call.argument<Double>("threshold1")
+        val threshold2 = call.argument<Double>("threshold2")
+        val apertureSize = call.argument<Int>("apertureSize") ?: 3
+        val l2gradient = call.argument<Boolean>("l2gradient") ?: false
+
+        if (bgr == null || width == null || height == null || threshold1 == null || threshold2 == null) {
+            result.error("BAD_ARGS", "Missing arguments", null)
+            return
+        }
+        val expected = width * height * 3
+        if (bgr.size != expected) {
+            result.error("BAD_ARGS", "bgr length mismatch (expected=$expected actual=${bgr.size})", null)
+            return
+        }
+
+        fun us(deltaNs: Long): Int = (deltaNs / 1000L).toInt()
+
+        var src: Mat? = null
+        var gray: Mat? = null
+        var edges: Mat? = null
+        var rgba: Mat? = null
+        try {
+            val t0 = System.nanoTime()
+            src = Mat(height, width, CvType.CV_8UC3)
+            val t1 = System.nanoTime()
+            src.put(0, 0, bgr)
+            val t2 = System.nanoTime()
+
+            gray = Mat()
+            Imgproc.cvtColor(src, gray, Imgproc.COLOR_BGR2GRAY)
+            val t3 = System.nanoTime()
+
+            edges = Mat()
+            Imgproc.Canny(gray, edges, threshold1, threshold2, apertureSize, l2gradient)
+            val t4 = System.nanoTime()
+
+            rgba = Mat()
+            Imgproc.cvtColor(edges, rgba, Imgproc.COLOR_GRAY2RGBA)
+            val t5 = System.nanoTime()
+
+            val out = ByteArray(width * height * 4)
+            rgba.get(0, 0, out)
+            val t6 = System.nanoTime()
+
+            val stages: HashMap<String, Int> =
+                hashMapOf(
+                    "matAllocUs" to us(t1 - t0),
+                    "matPutUs" to us(t2 - t1),
+                    "cvtColorGrayUs" to us(t3 - t2),
+                    "cannyUs" to us(t4 - t3),
+                    "cvtColorRgbaUs" to us(t5 - t4),
+                    "matGetUs" to us(t6 - t5),
+                )
+
+            val nativeTotalUs = us(t6 - t0)
+            val payload: HashMap<String, Any> =
+                hashMapOf(
+                    "rgba" to out,
+                    "nativeTotalUs" to nativeTotalUs,
+                    "stagesUs" to stages,
+                )
+            result.success(payload)
         } catch (e: Throwable) {
             result.error("OPENCV_ERROR", e.message, null)
         } finally {

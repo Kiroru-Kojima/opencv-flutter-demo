@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
+import 'opencv_native_channel.dart';
 import 'opencv_native_channel_method_channel.dart';
 
 abstract class OpencvNativeChannelPlatform extends PlatformInterface {
@@ -39,5 +40,17 @@ abstract class OpencvNativeChannelPlatform extends PlatformInterface {
     required bool l2gradient,
   }) {
     throw UnimplementedError('cannyBgrToRgba() has not been implemented.');
+  }
+
+  Future<CannyProfileResult> cannyBgrToRgbaProfile({
+    required Uint8List bgr,
+    required int width,
+    required int height,
+    required double threshold1,
+    required double threshold2,
+    required int apertureSize,
+    required bool l2gradient,
+  }) {
+    throw UnimplementedError('cannyBgrToRgbaProfile() has not been implemented.');
   }
 }

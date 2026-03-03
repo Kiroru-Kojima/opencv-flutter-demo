@@ -23,6 +23,23 @@ class MockOpencvNativeChannelPlatform
   }) async {
     return Uint8List(width * height * 4);
   }
+
+  @override
+  Future<CannyProfileResult> cannyBgrToRgbaProfile({
+    required Uint8List bgr,
+    required int width,
+    required int height,
+    required double threshold1,
+    required double threshold2,
+    required int apertureSize,
+    required bool l2gradient,
+  }) async {
+    return CannyProfileResult(
+      rgba: Uint8List(width * height * 4),
+      nativeTotalUs: 1234,
+      stagesUs: const {'cannyUs': 100},
+    );
+  }
 }
 
 void main() {

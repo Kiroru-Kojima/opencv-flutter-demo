@@ -35,7 +35,7 @@ class _BenchScreenState extends State<BenchScreen> {
 
     try {
       final img = buildCheckerboardBgrImage(width: 640, height: 480);
-      final samples = await _backend.benchmarkCannyMs(
+      final r = await _backend.benchmarkCannyProfile(
         img.bgrBytes,
         width: img.width,
         height: img.height,
@@ -46,7 +46,7 @@ class _BenchScreenState extends State<BenchScreen> {
         apertureSize: 3,
         l2gradient: false,
       );
-      setState(() => _summary = _BenchSummary.fromSamples(samples));
+      setState(() => _summary = _BenchSummary.fromNative(r));
     } catch (e, st) {
       debugPrint('OpenCV native bench error: $e\n$st');
       setState(() => _error = e.toString());
@@ -160,36 +160,79 @@ class _SummaryCard extends StatelessWidget {
             Text('結果', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text('count: ${summary.count}', style: mono),
-            Text('avg:   ${summary.avgMs.toStringAsFixed(3)} ms', style: mono),
-            Text('p50:   ${summary.p50Ms.toStringAsFixed(3)} ms', style: mono),
-            Text('p90:   ${summary.p90Ms.toStringAsFixed(3)} ms', style: mono),
-            Text('p99:   ${summary.p99Ms.toStringAsFixed(3)} ms', style: mono),
-            Text('fps≈   ${summary.fps.toStringAsFixed(1)}', style: mono),
+            Text('total(avg/p50/p90/p99): ${summary.total.avgMs.toStringAsFixed(3)} / '
+                '${summary.total.p50Ms.toStringAsFixed(3)} / ${summary.total.p90Ms.toStringAsFixed(3)} / '
+                '${summary.total.p99Ms.toStringAsFixed(3)} ms', style: mono),
+            Text('native(avg/p50/p90/p99): ${summary.native.avgMs.toStringAsFixed(3)} / '
+                '${summary.native.p50Ms.toStringAsFixed(3)} / ${summary.native.p90Ms.toStringAsFixed(3)} / '
+                '${summary.native.p99Ms.toStringAsFixed(3)} ms', style: mono),
+            Text('overhead(avg/p50/p90/p99): ${summary.overhead.avgMs.toStringAsFixed(3)} / '
+                '${summary.overhead.p50Ms.toStringAsFixed(3)} / ${summary.overhead.p90Ms.toStringAsFixed(3)} / '
+                '${summary.overhead.p99Ms.toStringAsFixed(3)} ms', style: mono),
+            Text('fps≈ (native avg): ${summary.nativeFps.toStringAsFixed(1)}', style: mono),
+            if (summary.lastNativeStagesUs != null) ...[
+              const SizedBox(height: 8),
+              Text('native stages (us): ${_formatStages(summary.lastNativeStagesUs!)}', style: mono),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  static String _formatStages(Map<String, int> stages) {
+    final keys = stages.keys.toList()..sort();
+    return keys.map((k) => '$k=${stages[k]}').join(', ');
   }
 }
 
 class _BenchSummary {
   _BenchSummary({
     required this.count,
+    required this.total,
+    required this.native,
+    required this.overhead,
+    required this.nativeFps,
+    required this.lastNativeStagesUs,
+  });
+
+  final int count;
+  final _Stats total;
+  final _Stats native;
+  final _Stats overhead;
+  final double nativeFps;
+  final Map<String, int>? lastNativeStagesUs;
+
+  factory _BenchSummary.fromNative(NativeBenchSamples r) {
+    final total = _Stats.fromSamples(r.totalMs);
+    final native = _Stats.fromSamples(r.nativeMs);
+    final overhead = _Stats.fromSamples(r.overheadMs);
+    final fps = native.avgMs <= 0 ? 0.0 : 1000.0 / native.avgMs;
+    return _BenchSummary(
+      count: r.totalMs.length,
+      total: total,
+      native: native,
+      overhead: overhead,
+      nativeFps: fps,
+      lastNativeStagesUs: r.lastNativeStagesUs,
+    );
+  }
+}
+
+class _Stats {
+  _Stats({
     required this.avgMs,
     required this.p50Ms,
     required this.p90Ms,
     required this.p99Ms,
-    required this.fps,
   });
 
-  final int count;
   final double avgMs;
   final double p50Ms;
   final double p90Ms;
   final double p99Ms;
-  final double fps;
 
-  factory _BenchSummary.fromSamples(List<double> samplesMs) {
+  factory _Stats.fromSamples(List<double> samplesMs) {
     double percentile(double q) {
       if (samplesMs.isEmpty) return 0.0;
       if (q <= 0) return samplesMs.reduce((a, b) => a < b ? a : b);
@@ -200,14 +243,11 @@ class _BenchSummary {
     }
 
     final avg = samplesMs.isEmpty ? 0.0 : samplesMs.fold<double>(0, (a, b) => a + b) / samplesMs.length;
-    return _BenchSummary(
-      count: samplesMs.length,
+    return _Stats(
       avgMs: avg,
       p50Ms: percentile(0.50),
       p90Ms: percentile(0.90),
       p99Ms: percentile(0.99),
-      fps: avg <= 0 ? 0.0 : 1000.0 / avg,
     );
   }
 }
-

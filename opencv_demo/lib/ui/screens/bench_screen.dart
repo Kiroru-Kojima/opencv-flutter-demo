@@ -42,7 +42,7 @@ class _BenchScreenState extends State<BenchScreen> {
     try {
       final img = buildCheckerboardBgrImage(width: 640, height: 480);
       final src = img.toMat();
-      final r = await _backend.benchmarkCanny(
+      final r = await _backend.benchmarkCannyDetailed(
         src,
         warmup: _warmup,
         iterations: _iterations,
@@ -54,7 +54,7 @@ class _BenchScreenState extends State<BenchScreen> {
       src.dispose();
 
       setState(() {
-        _summary = _BenchSummary.fromSamples(r.samplesMs);
+        _summary = _BenchSummary.fromDetail(r);
       });
     } catch (e, st) {
       debugPrint('OpenCV bench error: $e\n$st');
@@ -174,11 +174,16 @@ class _SummaryCard extends StatelessWidget {
             Text('結果', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
             Text('count: ${summary.count}', style: mono),
-            Text('avg:   ${summary.avgMs.toStringAsFixed(3)} ms', style: mono),
-            Text('p50:   ${summary.p50Ms.toStringAsFixed(3)} ms', style: mono),
-            Text('p90:   ${summary.p90Ms.toStringAsFixed(3)} ms', style: mono),
-            Text('p99:   ${summary.p99Ms.toStringAsFixed(3)} ms', style: mono),
-            Text('fps≈   ${summary.fps.toStringAsFixed(1)}', style: mono),
+            Text('total(avg/p50/p90/p99): ${summary.total.avgMs.toStringAsFixed(3)} / '
+                '${summary.total.p50Ms.toStringAsFixed(3)} / ${summary.total.p90Ms.toStringAsFixed(3)} / '
+                '${summary.total.p99Ms.toStringAsFixed(3)} ms', style: mono),
+            Text('gray(avg/p50/p90/p99):  ${summary.gray.avgMs.toStringAsFixed(3)} / '
+                '${summary.gray.p50Ms.toStringAsFixed(3)} / ${summary.gray.p90Ms.toStringAsFixed(3)} / '
+                '${summary.gray.p99Ms.toStringAsFixed(3)} ms', style: mono),
+            Text('canny(avg/p50/p90/p99): ${summary.canny.avgMs.toStringAsFixed(3)} / '
+                '${summary.canny.p50Ms.toStringAsFixed(3)} / ${summary.canny.p90Ms.toStringAsFixed(3)} / '
+                '${summary.canny.p99Ms.toStringAsFixed(3)} ms', style: mono),
+            Text('fps≈ (total avg): ${summary.fps.toStringAsFixed(1)}', style: mono),
           ],
         ),
       ),
@@ -189,21 +194,41 @@ class _SummaryCard extends StatelessWidget {
 class _BenchSummary {
   _BenchSummary({
     required this.count,
-    required this.avgMs,
-    required this.p50Ms,
-    required this.p90Ms,
-    required this.p99Ms,
+    required this.total,
+    required this.gray,
+    required this.canny,
     required this.fps,
   });
 
   final int count;
+  final _Stats total;
+  final _Stats gray;
+  final _Stats canny;
+  final double fps;
+
+  factory _BenchSummary.fromDetail(OpenCvBenchDetailResult r) {
+    final total = _Stats.fromSamples(r.totalMs);
+    final gray = _Stats.fromSamples(r.grayMs);
+    final canny = _Stats.fromSamples(r.cannyMs);
+    final fps = total.avgMs <= 0 ? 0.0 : 1000.0 / total.avgMs;
+    return _BenchSummary(count: r.totalMs.length, total: total, gray: gray, canny: canny, fps: fps);
+  }
+}
+
+class _Stats {
+  _Stats({
+    required this.avgMs,
+    required this.p50Ms,
+    required this.p90Ms,
+    required this.p99Ms,
+  });
+
   final double avgMs;
   final double p50Ms;
   final double p90Ms;
   final double p99Ms;
-  final double fps;
 
-  factory _BenchSummary.fromSamples(List<double> samplesMs) {
+  factory _Stats.fromSamples(List<double> samplesMs) {
     double percentile(double q) {
       if (samplesMs.isEmpty) return 0.0;
       if (q <= 0) return samplesMs.reduce((a, b) => a < b ? a : b);
@@ -214,13 +239,11 @@ class _BenchSummary {
     }
 
     final avg = samplesMs.isEmpty ? 0.0 : samplesMs.fold<double>(0, (a, b) => a + b) / samplesMs.length;
-    return _BenchSummary(
-      count: samplesMs.length,
+    return _Stats(
       avgMs: avg,
       p50Ms: percentile(0.50),
       p90Ms: percentile(0.90),
       p99Ms: percentile(0.99),
-      fps: avg <= 0 ? 0.0 : 1000.0 / avg,
     );
   }
 }
