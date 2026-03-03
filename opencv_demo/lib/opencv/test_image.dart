@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:opencv_core/opencv.dart' as cv;
+import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 class BgrTestImage {
   BgrTestImage({
@@ -37,4 +37,3 @@ BgrTestImage buildCheckerboardBgrImage({required int width, required int height}
 
   return BgrTestImage(width: width, height: height, bgrBytes: bytes);
 }
-

@@ -2,11 +2,17 @@
 
 このリポジトリは「OpenCVをモバイルにどう組み込むのが良いか」を調べるためのデモです。
 
-- Flutterアプリ: `opencv_demo`
-  - `FFI (opencv_core)` と `Platform Channel (native OpenCV)` を切り替えて同一処理を実行できます
-- Platform Channelプラグイン: `packages/opencv_channel`
-  - Android: Maven CentralのOpenCV（Java API）を使用
-  - iOS: CocoaPodsの `OpenCV-Dynamic-Framework` を使用（Objective-C++）
+- Flutterアプリ（opencv_dart方式）: `opencv_demo`
+  - `FFI (opencv_dart)` を使って同一処理を実行
+  - Androidのみ `Platform Channel (native OpenCV)` も選べます（`packages/opencv_channel`）
+- Flutterアプリ（ネイティブOpenCV方式）: `opencv_native_demo`
+  - `Platform Channel (native OpenCV)` のみ（`packages/opencv_native_channel`）
+
+- Platform Channelプラグイン（Androidのみ）: `packages/opencv_channel`
+  - Android: Maven CentralのOpenCV（Java API）
+- Platform Channelプラグイン（iOS/Android）: `packages/opencv_native_channel`
+  - iOS: CocoaPodsの `OpenCV-Dynamic-Framework`（Objective-C++）
+  - Android: Maven CentralのOpenCV（Java API）
 
 ## 動かし方（最短）
 
@@ -16,15 +22,25 @@ flutter pub get
 flutter run
 ```
 
+ネイティブOpenCV方式:
+```bash
+cd opencv_native_demo
+flutter pub get
+flutter run
+```
+
 補足:
-- 初回ビルドは、OpenCVの取得/ビルド（`opencv_core`）やPod/Gradle依存の取得により時間がかかる場合があります
-- iOSはCocoaPodsが必要です（`OpenCV-Dynamic-Framework` をPodで取得します）
+- 初回ビルドは、Pod/Gradle依存の取得により時間がかかる場合があります
+- `opencv_native_demo`（iOS）はCocoaPodsで `OpenCV-Dynamic-Framework` を取得します
 - AndroidはGradleで `org.opencv:opencv` を取得します
 
 アプリ起動後:
 - `Demo` タブ: 合成画像（チェッカーボード）→ Canny エッジ
 - `Bench` タブ: 同一入力に対する処理時間分布（avg/p50/p90/p99）
-- `backend` で `FFI` / `Platform Channel` を切り替え
+- Androidの `opencv_demo` のみ `backend` で `FFI` / `Platform Channel` を切り替え
+
+比較する場合:
+- 同一端末で `opencv_demo` と `opencv_native_demo` の `Bench` を実行し、数値を比較します
 
 ## 調査メモ
 

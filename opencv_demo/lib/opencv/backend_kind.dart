@@ -7,7 +7,7 @@ enum OpenCvBackendKind {
 
 extension OpenCvBackendKindLabel on OpenCvBackendKind {
   String get label => switch (this) {
-        OpenCvBackendKind.ffi => 'FFI (opencv_core)',
+        OpenCvBackendKind.ffi => 'FFI (opencv_dart)',
         OpenCvBackendKind.platformChannel => 'Platform Channel (native OpenCV)',
       };
 }

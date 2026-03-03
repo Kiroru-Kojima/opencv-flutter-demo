@@ -2,7 +2,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:async';
 
-import 'package:opencv_core/opencv.dart' as cv;
+import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 Future<ui.Image> rgbaMatToUiImage(cv.Mat rgba) async {
   if (rgba.channels != 4) {

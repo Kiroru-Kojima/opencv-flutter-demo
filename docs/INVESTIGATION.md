@@ -37,19 +37,20 @@
 ## 3. Flutterでの導入（既存プラグイン / 自作）
 
 ### 既存（FFI系）
-- Flutter 3.38未満向け: `opencv_core`（※discontinuedだが動作用途としては利用可能）  
-  - このリポジトリのFlutterアプリが使用
-- Flutter 3.38以降向け: `opencv_dart` / `dartcv4`（Native Assets / hooks前提）
+- このリポジトリでは `opencv_demo` が `opencv_dart`（FFI）方式
+- `opencv_core` は discontinued のため新規採用は非推奨
+- `opencv_dart` / `dartcv4` は Native Assets / hooks 前提のため、Flutterバージョン整合に注意
 
 参考:
-- [opencv_core (pub.dev)](https://pub.dev/packages/opencv_core)
 - [opencv_dart (pub.dev)](https://pub.dev/packages/opencv_dart)
 - [dartcv4 (pub.dev)](https://pub.dev/packages/dartcv4)
 
 ### 自作案A: Platform Channels 経由でネイティブ呼び出し
 - **長所**: 既存のiOS/AndroidのOpenCV導入パターン（Pods/Gradle/NDK）をそのまま使いやすい
 - **短所**: 画像バッファの受け渡しでコピー・シリアライズが発生しやすく、フレーム単位の呼び出し回数が増えるほど不利
-- このリポジトリでは `packages/opencv_channel` が最小実装例です
+- このリポジトリでは以下が最小実装例です
+  - Androidのみ: `packages/opencv_channel`
+  - iOS/Android: `packages/opencv_native_channel`（iOSは `OpenCV-Dynamic-Framework` をPodで取得）
 
 ### 自作案B: Dart FFI で直接呼び出し
 - **長所**: 呼び出しオーバーヘッドが小さく、設計次第でコピー回数も抑えやすい（頻繁なフレーム処理に向く）
@@ -124,3 +125,7 @@
 ### このリポジトリでの位置づけ
 - `opencv_demo` の `Bench` は「処理関数単体の時間」をまず出すための簡易ベンチです  
   - 実運用のカメラパイプライン（YUV→RGB変換、描画、スレッド同期）込みの計測は別途追加が必要
+
+### 比較のやり方（このリポジトリ）
+- `opencv_demo`（FFI: opencv_dart）と `opencv_native_demo`（Platform Channel: native OpenCV）を同一端末でそれぞれ実行し、`Bench` の数値を比較します
+- iOSは1つのアプリに「FFI用OpenCV」と「ネイティブ用OpenCV（別配布）」を同居させるとリンク衝突しやすいため、2アプリ構成に分けています

@@ -28,15 +28,18 @@ PODS:
     - DartCvIOS/core
   - DartCvIOS/video (4.12.0.2):
     - DartCvIOS/core
+  - DartCvIOS/videoio (4.12.0.2):
+    - DartCvIOS/core
   - Flutter (1.0.0)
-  - opencv_core (0.0.1):
+  - opencv_dart (0.0.1):
     - DartCvIOS (= 4.12.0.2)
     - DartCvIOS/dnn (= 4.12.0.2)
+    - DartCvIOS/videoio (= 4.12.0.2)
     - Flutter
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - opencv_core (from `.symlinks/plugins/opencv_core/ios`)
+  - opencv_dart (from `.symlinks/plugins/opencv_dart/ios`)
 
 SPEC REPOS:
   trunk:
@@ -45,13 +48,13 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  opencv_core:
-    :path: ".symlinks/plugins/opencv_core/ios"
+  opencv_dart:
+    :path: ".symlinks/plugins/opencv_dart/ios"
 
 SPEC CHECKSUMS:
   DartCvIOS: 31615ff863f0fc709aee9b93dc3afa3500d35ba7
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  opencv_core: 506f37c7bfc609f1ccffe628cc18ff306e577c6f
+  opencv_dart: 71fc6f2ae1f9feb2f143eeee32823f3dc492ab47
 
 PODFILE CHECKSUM: f8c2dcdfb50bb67645580d28a6bf814fca30bdec
 

@@ -1,6 +1,6 @@
 import 'dart:ui' as ui;
 
-import 'package:opencv_core/opencv.dart' as cv;
+import 'package:opencv_dart/opencv_dart.dart' as cv;
 
 import 'mat_ui_image.dart';
 
@@ -123,4 +123,3 @@ class OpenCvBenchResult {
     return sorted[idx.clamp(0, sorted.length - 1)];
   }
 }
-
