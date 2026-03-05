@@ -40,6 +40,42 @@ class MockOpencvNativeChannelPlatform
       stagesUs: const {'cannyUs': 100},
     );
   }
+
+  @override
+  Future<void> fgExtractReset() async {}
+
+  @override
+  Future<FgExtractProfileResult> fgExtractBgrProfile({
+    required Uint8List bgr,
+    required int width,
+    required int height,
+    required double alpha,
+    required double threshold,
+    required int morphIterations,
+  }) async {
+    return FgExtractProfileResult(
+      fgCount: 42,
+      nativeTotalUs: 1234,
+      stagesUs: const {'bgUpdateUs': 100},
+    );
+  }
+
+  @override
+  Future<Mp4FgBenchProfileResult> benchmarkMp4FgExtractProfile({
+    required String path,
+    required int warmup,
+    required int iterations,
+    required double alpha,
+    required double threshold,
+    required int morphIterations,
+  }) async {
+    return Mp4FgBenchProfileResult(
+      totalUs: List<int>.filled(iterations, 2000),
+      decodeUs: List<int>.filled(iterations, 800),
+      processUs: List<int>.filled(iterations, 1200),
+      lastFgCount: 123,
+    );
+  }
 }
 
 void main() {

@@ -36,6 +36,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   opencv_native_channel:
     path: ../packages/opencv_native_channel
+  opencv_bench_assets:
+    path: ../packages/opencv_bench_assets
 
 dev_dependencies:
   flutter_test:

@@ -53,4 +53,30 @@ abstract class OpencvNativeChannelPlatform extends PlatformInterface {
   }) {
     throw UnimplementedError('cannyBgrToRgbaProfile() has not been implemented.');
   }
+
+  Future<void> fgExtractReset() {
+    throw UnimplementedError('fgExtractReset() has not been implemented.');
+  }
+
+  Future<FgExtractProfileResult> fgExtractBgrProfile({
+    required Uint8List bgr,
+    required int width,
+    required int height,
+    required double alpha,
+    required double threshold,
+    required int morphIterations,
+  }) {
+    throw UnimplementedError('fgExtractBgrProfile() has not been implemented.');
+  }
+
+  Future<Mp4FgBenchProfileResult> benchmarkMp4FgExtractProfile({
+    required String path,
+    required int warmup,
+    required int iterations,
+    required double alpha,
+    required double threshold,
+    required int morphIterations,
+  }) {
+    throw UnimplementedError('benchmarkMp4FgExtractProfile() has not been implemented.');
+  }
 }

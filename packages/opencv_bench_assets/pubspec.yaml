@@ -1,0 +1,23 @@
+name: opencv_bench_assets
+description: "Benchmark assets (sample BGR video frames) for OpenCV_demo."
+publish_to: "none"
+
+version: 0.0.1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  assets:
+    - assets/sample_video_160x120_90f.bgr
+    - assets/sample_video_160x120_90f.json
+    - assets/sample_video_160x120_90f.mp4
+    - assets/sample_video_160x120_90f.mov

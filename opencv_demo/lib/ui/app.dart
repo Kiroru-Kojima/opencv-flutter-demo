@@ -20,10 +20,13 @@ class OpenCvDemoApp extends StatelessWidget {
 class _Home extends StatelessWidget {
   const _Home();
 
+  static const bool _autoRunMp4Bench = bool.fromEnvironment('AUTO_RUN_MP4_BENCH', defaultValue: false);
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: _autoRunMp4Bench ? 1 : 0,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('OpenCV Demo'),
@@ -44,4 +47,3 @@ class _Home extends StatelessWidget {
     );
   }
 }
-
