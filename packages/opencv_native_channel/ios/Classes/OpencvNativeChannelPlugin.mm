@@ -282,29 +282,29 @@ static NSString* _DescribeFileAtPath(NSString* path) {
         return cv::countNonZero(mask);
       };
 
-      auto openCap = [&](cv::VideoCapture& cap) -> bool {
-        NSString* p1 = path;
-        NSString* p2 = [[path stringByStandardizingPath] stringByResolvingSymlinksInPath];
+	      auto openCap = [&](cv::VideoCapture& cap) -> bool {
+	        NSString* p1 = path;
+	        NSString* p2 = [[path stringByStandardizingPath] stringByResolvingSymlinksInPath];
 
-        NSArray<NSString*>* candidates = @[ p1, p2 ];
-        for (NSString* p in candidates) {
-          if (p == nil || p.length == 0) continue;
-          const std::string pu([p UTF8String]);
-          if (cap.open(pu, cv::CAP_ANY)) return true;
-          if (cap.open(pu, cv::CAP_AVFOUNDATION)) return true;
+	        NSArray<NSString*>* candidates = @[ p1, p2 ];
+	        for (NSString* p in candidates) {
+	          if (p == nil || p.length == 0) continue;
+	          const std::string pu([p UTF8String]);
+	          if (cap.open(pu, cv::CAP_AVFOUNDATION)) return true;
+	          if (cap.open(pu, cv::CAP_ANY)) return true;
 
-          NSURL* fileUrl = [NSURL fileURLWithPath:p];
-          if (fileUrl != nil) {
-            const std::string urlAbs([[fileUrl absoluteString] UTF8String]);
-            const std::string urlPath([[fileUrl path] UTF8String]);
-            if (cap.open(urlAbs, cv::CAP_ANY)) return true;
-            if (cap.open(urlAbs, cv::CAP_AVFOUNDATION)) return true;
-            if (cap.open(urlPath, cv::CAP_ANY)) return true;
-            if (cap.open(urlPath, cv::CAP_AVFOUNDATION)) return true;
-          }
-        }
-        return false;
-      };
+	          NSURL* fileUrl = [NSURL fileURLWithPath:p];
+	          if (fileUrl != nil) {
+	            const std::string urlAbs([[fileUrl absoluteString] UTF8String]);
+	            const std::string urlPath([[fileUrl path] UTF8String]);
+	            if (cap.open(urlAbs, cv::CAP_AVFOUNDATION)) return true;
+	            if (cap.open(urlAbs, cv::CAP_ANY)) return true;
+	            if (cap.open(urlPath, cv::CAP_AVFOUNDATION)) return true;
+	            if (cap.open(urlPath, cv::CAP_ANY)) return true;
+	          }
+	        }
+	        return false;
+	      };
 
       cv::VideoCapture cap;
       if (!openCap(cap)) {
@@ -319,40 +319,68 @@ static NSString* _DescribeFileAtPath(NSString* path) {
         return;
       }
 
-      auto restartCapture = [&]() -> bool {
-        cap.release();
-        return openCap(cap);
-      };
+	      auto rewind = [&]() -> bool {
+	        if (cap.set(cv::CAP_PROP_POS_FRAMES, 0.0)) return true;
+	        cap.release();
+	        return openCap(cap);
+	      };
 
-      cv::Mat frame;
+	      cv::Mat frame;
 
-      // warmup
-      for (int i = 0; i < warmup; i++) {
-        bool ok = cap.read(frame);
-        if (!ok) ok = restartCapture() && cap.read(frame);
-        if (!ok) continue;
-        cv::Mat gray;
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        (void)processGray(gray);
-      }
+	      // warmup
+	      for (int i = 0; i < warmup; i++) {
+	        bool ok = cap.grab();
+	        if (!ok) ok = rewind() && cap.grab();
+	        if (!ok) continue;
+	        ok = cap.retrieve(frame);
+	        if (!ok) continue;
 
-      for (int i = 0; i < iterations; i++) {
-        const CFAbsoluteTime t0 = CFAbsoluteTimeGetCurrent();
+	        cv::Mat gray;
+	        if (frame.channels() == 4) {
+	          cv::cvtColor(frame, gray, cv::COLOR_BGRA2GRAY);
+	        } else if (frame.channels() == 3) {
+	          cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+	        } else if (frame.channels() == 1) {
+	          gray = frame;
+	        } else {
+	          continue;
+	        }
+	        (void)processGray(gray);
+	      }
 
-        const CFAbsoluteTime td0 = CFAbsoluteTimeGetCurrent();
-        bool ok = cap.read(frame);
-        if (!ok) ok = restartCapture() && cap.read(frame);
-        const CFAbsoluteTime td1 = CFAbsoluteTimeGetCurrent();
-        if (!ok) {
-          result([FlutterError errorWithCode:@"VIDEOIO_READ" message:@"VideoCapture.read failed after restart" details:nil]);
-          return;
-        }
+	      for (int i = 0; i < iterations; i++) {
+	        const CFAbsoluteTime t0 = CFAbsoluteTimeGetCurrent();
 
-        const CFAbsoluteTime tp0 = CFAbsoluteTimeGetCurrent();
-        cv::Mat gray;
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        const int fgCount = processGray(gray);
-        const CFAbsoluteTime tp1 = CFAbsoluteTimeGetCurrent();
+	        const CFAbsoluteTime td0 = CFAbsoluteTimeGetCurrent();
+	        bool ok = cap.grab();
+	        if (!ok) ok = rewind() && cap.grab();
+	        if (!ok) {
+	          result([FlutterError errorWithCode:@"VIDEOIO_READ" message:@"VideoCapture.grab failed" details:nil]);
+	          return;
+	        }
+	        ok = cap.retrieve(frame);
+	        const CFAbsoluteTime td1 = CFAbsoluteTimeGetCurrent();
+	        if (!ok) {
+	          result([FlutterError errorWithCode:@"VIDEOIO_READ" message:@"VideoCapture.retrieve failed" details:nil]);
+	          return;
+	        }
+
+	        const CFAbsoluteTime tp0 = CFAbsoluteTimeGetCurrent();
+	        cv::Mat gray;
+	        if (frame.channels() == 4) {
+	          cv::cvtColor(frame, gray, cv::COLOR_BGRA2GRAY);
+	        } else if (frame.channels() == 3) {
+	          cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+	        } else if (frame.channels() == 1) {
+	          gray = frame;
+	        } else {
+	          result([FlutterError errorWithCode:@"VIDEOIO_READ"
+	                                     message:[NSString stringWithFormat:@"Unsupported frame channels=%d", frame.channels()]
+	                                     details:nil]);
+	          return;
+	        }
+	        const int fgCount = processGray(gray);
+	        const CFAbsoluteTime tp1 = CFAbsoluteTimeGetCurrent();
 
         lastFgCount = @(fgCount);
         [totalUs addObject:@(toUs(tp1 - t0))];

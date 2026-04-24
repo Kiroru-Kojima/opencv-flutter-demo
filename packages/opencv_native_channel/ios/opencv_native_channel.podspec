@@ -18,6 +18,7 @@ A new Flutter plugin project.
   s.dependency 'Flutter'
   s.dependency 'OpenCV-Dynamic-Framework'
   s.platform = :ios, '13.0'
+  s.frameworks = 'AVFoundation', 'CoreMedia', 'CoreVideo'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = {

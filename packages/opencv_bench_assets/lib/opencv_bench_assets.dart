@@ -55,13 +55,38 @@ Future<SampleBgrVideo> loadSampleBgrVideo160x120_90f() async {
 Future<String> ensureSampleMp4File160x120_90f() async {
   const mp4Asset = 'packages/opencv_bench_assets/assets/sample_video_160x120_90f.mp4';
   const fileName = 'opencv_bench_sample_video_160x120_90f.mp4';
+  const legacyMovName = 'opencv_bench_sample_video_160x120_90f.mov';
 
   final bytes = (await rootBundle.load(mp4Asset)).buffer.asUint8List();
   final file = File('${Directory.systemTemp.path}${Platform.pathSeparator}$fileName');
+  final legacyMov = File('${Directory.systemTemp.path}${Platform.pathSeparator}$legacyMovName');
 
+  // If an old .mov remains (from previous builds), delete it to avoid confusion.
+  if (await legacyMov.exists()) {
+    try {
+      await legacyMov.delete();
+    } catch (_) {}
+  }
+
+  // Avoid re-writing when already identical (cheap header check).
   if (await file.exists()) {
-    final st = await file.stat();
-    if (st.size == bytes.lengthInBytes) return file.path;
+    try {
+      final st = await file.stat();
+      if (st.size == bytes.lengthInBytes) {
+        final head = await file.openRead(0, 16).fold<List<int>>(<int>[], (a, b) => a..addAll(b));
+        final expectedHead = bytes.sublist(0, bytes.lengthInBytes < 16 ? bytes.lengthInBytes : 16);
+        if (head.length == expectedHead.length) {
+          bool ok = true;
+          for (int i = 0; i < head.length; i++) {
+            if (head[i] != expectedHead[i]) {
+              ok = false;
+              break;
+            }
+          }
+          if (ok) return file.path;
+        }
+      }
+    } catch (_) {}
   }
 
   await file.writeAsBytes(bytes, flush: true);
